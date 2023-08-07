@@ -1,7 +1,7 @@
 ![](src/main/resources/img/plumairanalytics.png)
 
 # What is this?
-Plum Air Analytics is the back-end portion of a two-part application. [Plum Air Visualizer](https://github.com/markrai/plum-air-visualizer) Currently, it queries your Purple Air™ sensors, and writes the data to a MySQL database.
+Plum Air Analytics is the back-end portion of a two-part application. [Plum Air Visualizer](https://github.com/markrai/plum-air-visualizer) Currently, it queries your Purple Air™ sensors, Ecobee thermostat, an OpenWeatherMap API, and writes the data to a MySQL database.
 The metrics which are captured include PM 2.5 values, as well as VOC values (if available).
 
 The data is polled every 30 minutes.
@@ -34,8 +34,7 @@ DB_USERNAME=[*********];
 
 # Future Plans
 
-I intend to gather data from my ecobee™ thermostat, as well as outdoor temperature and humidity data, which would make for interesting insights.
-Another thing to try might be to fetch data from PurpleAir™ sensors from the surrounding neighborhood, and correlate it with my residential data.
+One thing I'd like to try is to fetch data from PurpleAir™ sensors from the surrounding neighborhood, and correlate it with my residential data.
 Finally, report generation is something that can be implemented as well, with the existing data.
 
 As the data grows, certain considerations will come into play so that latency issues do not develop on the [Plum Air Visualizer](https://github.com/markrai/plum-air-visualizer) app.
