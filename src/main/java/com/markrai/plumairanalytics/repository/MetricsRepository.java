@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RepositoryRestResource
 public interface MetricsRepository extends JpaRepository<Metrics, Integer> {
-    // custom query methods can be added here if needed
+
 }
