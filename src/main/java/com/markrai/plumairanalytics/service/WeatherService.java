@@ -50,7 +50,7 @@ public class WeatherService {
             metrics.setPlacement(weatherDetector.getName());
         } else {
             System.err.println("No detector found for type 'openweathermap'");
-            return; // or handle this case as appropriate for your application
+            return;
         }
 
         metrics.setOutdoorTemperature(response.getMain().getTemp().floatValue());

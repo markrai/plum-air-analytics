@@ -27,7 +27,7 @@ public class JpaConfig {
         em.setDataSource(dataSource);
 
         // Set the packages to scan for @Entity annotations
-        em.setPackagesToScan(new String[] { "com.markrai.plumairanalytics" });
+        em.setPackagesToScan("com.markrai.plumairanalytics");
 
         // Set the JPA vendor adapter
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();

@@ -3,12 +3,14 @@ package com.markrai.plumairanalytics.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.markrai.plumairanalytics.dto.TokenResponse;
-import com.markrai.plumairanalytics.model.Detector;
 import com.markrai.plumairanalytics.model.EcobeeToken;
 import com.markrai.plumairanalytics.repository.EcobeeTokenRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -16,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.Instant;
 
 @Component
@@ -31,8 +34,6 @@ public class EcobeeTokenRefresher {
     public void refreshTokens() {
         EcobeeToken currentToken = ecobeeTokenRepository.findEcobeeToken();
         String refreshToken = currentToken.getRefreshToken();
-        Detector detector = currentToken.getDetector();  // Get the Detector object
-        int detectorId = detector.getId();  // Get the id from the Detector
         String apiKey = System.getenv("ECOBEE_API_KEY");
 
         // Prepare the request
@@ -68,10 +69,10 @@ public class EcobeeTokenRefresher {
 
         // Update the existing EcobeeToken entity
         currentToken.setAccessToken(accessToken);
-        currentToken.setAccessTokenExpiresAt(accessTokenExpiresAt);
+        currentToken.setAccessTokenExpiresAt(Timestamp.from(accessTokenExpiresAt));
         currentToken.setRefreshToken(refreshToken);
-        currentToken.setRefreshTokenExpiresAt(refreshTokenExpiresAt);
-        currentToken.setDetector(detector);
+        currentToken.setRefreshTokenExpiresAt(Timestamp.from(refreshTokenExpiresAt));
+        //currentToken.setDetector(detector);
 
         // Save the updated tokens and expiration time in storage
         ecobeeTokenRepository.save(currentToken);

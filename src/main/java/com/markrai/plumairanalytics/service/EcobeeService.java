@@ -48,14 +48,14 @@ public class EcobeeService {
         }
     }
 
-    String urlTemplate = "https://api.ecobee.com/1/thermostat?format=json";
+    final String urlTemplate = "https://api.ecobee.com/1/thermostat?format=json";
 
-    String body = "{\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\",\"includeRuntime\":true}}";
+    final String body = "{\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\",\"includeRuntime\":true}}";
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(urlTemplate)
+    final UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(urlTemplate)
             .queryParam("body", body);
 
-    URI uri = builder.build().encode().toUri();
+    final URI uri = builder.build().encode().toUri();
 
     public void getThermostatData(Timestamp currentTimestamp) {
         EcobeeToken currentToken = getCurrentToken();
@@ -114,8 +114,8 @@ public class EcobeeService {
     }
 
     private EcobeeToken getCurrentToken() {
-        EcobeeToken ecobeeToken = ecobeeTokenRepository.findEcobeeTokenFetchDetector();
-        if (ecobeeToken == null || ecobeeToken.getAccessTokenExpiresAt().isBefore(Instant.now())) {
+        EcobeeToken ecobeeToken = ecobeeTokenRepository.findEcobeeToken();
+        if (ecobeeToken == null || ecobeeToken.getAccessTokenExpiresAt().toInstant().isBefore(Instant.now())) {
             throw new RuntimeException("No valid access token available");
         }
         return ecobeeToken;

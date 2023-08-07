@@ -43,8 +43,8 @@ public class PurpleAirService {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    // @Scheduled(fixedRate = 1800000) // 30 minutes
-    @Scheduled(fixedRate = 120000) // 2 minutes - for testing
+    @Scheduled(fixedRate = 1800000) // 30 minutes
+    // @Scheduled(fixedRate = 120000) // 2 minutes - for testing
     public void queryDetectors() {
         System.out.println("we are in queryDetectors()" + transactionManager.getClass().getName());
         Iterable<Detector> detectors = detectorRepository.findAll();
@@ -59,7 +59,6 @@ public class PurpleAirService {
                 collectData(detector.getIpAddr(), detector.getId(), currentTimestamp);
             }
         }
-
     }
 
     private Float handleNull(Float value) {

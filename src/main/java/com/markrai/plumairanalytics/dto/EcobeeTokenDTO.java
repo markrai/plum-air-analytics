@@ -1,37 +1,14 @@
-package com.markrai.plumairanalytics.model;
-
-import jakarta.persistence.*;
+package com.markrai.plumairanalytics.dto;
 
 import java.sql.Timestamp;
 
-@Entity
-@Table(name = "ecobee_token")
-public class EcobeeToken {
+public class EcobeeTokenDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
-    @Column(name = "access_token")
     private String accessToken;
-
-    @Column(name = "access_token_expires_at")
     private Timestamp accessTokenExpiresAt;
-
-    @Column(name = "refresh_token")
     private String refreshToken;
-
-    @Column(name = "refresh_token_expires_at")
     private Timestamp refreshTokenExpiresAt;
-
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
+    //private int detectorId;
 
     public String getAccessToken() {
         return accessToken;
