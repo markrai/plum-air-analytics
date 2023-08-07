@@ -19,7 +19,7 @@ import java.sql.Timestamp;
 import java.util.Optional;
 
 @Service
-public class DetectorService {
+public class PurpleAirService {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
@@ -30,33 +30,49 @@ public class DetectorService {
     @Autowired
     private MetricsRepository metricsRepository;
 
+    @Autowired
+    private EcobeeService ecobeeService;
+
+    @Autowired
+    private WeatherService weatherService;
+
     private final RestTemplate restTemplate;
 
     @Autowired
-    public DetectorService(RestTemplateBuilder restTemplateBuilder) {
+    public PurpleAirService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    @Scheduled(fixedRate = 1800000)
+    // @Scheduled(fixedRate = 1800000) // 30 minutes
+    @Scheduled(fixedRate = 120000) // 2 minutes - for testing
     public void queryDetectors() {
         System.out.println("we are in queryDetectors()" + transactionManager.getClass().getName());
         Iterable<Detector> detectors = detectorRepository.findAll();
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());  // Capture the timestamp here
+
         for (Detector detector : detectors) {
-            collectData(detector.getIpAddr(), detector.getId());
+            if ("API".equals(detector.getIpAddr()) && "ecobee".equals(detector.getType())) {
+                ecobeeService.getThermostatData(currentTimestamp);
+            } else if ("API".equals(detector.getIpAddr()) && "openweathermap".equals(detector.getType())) {
+                weatherService.getWeatherData(currentTimestamp);
+            } else {
+                collectData(detector.getIpAddr(), detector.getId(), currentTimestamp);
+            }
         }
+
     }
 
     private Float handleNull(Float value) {
         return value != null && !Float.isNaN(value) ? value : null;
     }
 
-    public void collectData(String ip, int id) {
+    public void collectData(String ip, int id, Timestamp currentTimeStamp) {
         String url = "http://" + ip + "/json";
 
         try {
             DetectorResponse response = restTemplate.getForObject(url, DetectorResponse.class);
             if (response != null) {
-                writeMetricsData(response, id);
+                writeMetricsData(response, id, currentTimeStamp);
             }
         } catch (RestClientException e) {
             e.printStackTrace();
@@ -64,11 +80,11 @@ public class DetectorService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void writeMetricsData(DetectorResponse response, int detectorId) {
+    public void writeMetricsData(DetectorResponse response, int detectorId, Timestamp currentTimestamp) {
         Metrics metrics = new Metrics();
 
         metrics.setDetectorId(detectorId);
-        metrics.setTimestamp(new Timestamp(System.currentTimeMillis()));
+        metrics.setTimestamp(currentTimestamp);
 
         // Fetch the current name from the detector table and set it as the placement
         Optional<Detector> optionalDetector = detectorRepository.findById(detectorId);
@@ -86,17 +102,14 @@ public class DetectorService {
         metrics.setP_2_5_um_b(handleNull(response.getP_2_5_um_b()));
         metrics.setGas_680(handleNull(response.getGas_680()));
 
-        System.out.println("writing metrics: " + metrics);
+        System.out.println("writing PurpleAir data: " + metrics);
 
         try {
             Metrics savedMetrics = metricsRepository.save(metrics);
             metricsRepository.flush();
-            System.out.println("Saved metrics: " + savedMetrics);
         } catch (Exception e) {
             System.err.println("Error occurred while trying to save metrics: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
-
 }

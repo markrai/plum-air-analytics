@@ -1,6 +1,7 @@
 package com.markrai.plumairanalytics.model;
 
 import jakarta.persistence.*;
+
 import java.sql.Timestamp;
 
 @Entity
@@ -34,6 +35,21 @@ public class Metrics {
 
     @Column(name = "gas_680")
     private Float gas_680;
+
+    @Column(name = "temperature")
+    private Float temperature;
+
+    @Column(name = "humidity")
+    private Float humidity;
+
+    @Column(name = "co2")
+    private Integer co2;
+
+    @Column(name = "outdoor_temperature")
+    private Float outdoorTemperature;
+
+    @Column(name = "outdoor_humidity")
+    private Float outdoorHumidity;
 
 
     // Getters & Setters
@@ -111,6 +127,46 @@ public class Metrics {
         this.gas_680 = gas_680;
     }
 
+    public Float getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Float temperature) {
+        this.temperature = temperature;
+    }
+
+    public Float getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(Float humidity) {
+        this.humidity = humidity;
+    }
+
+    public Integer getCo2() {
+        return co2;
+    }
+
+    public void setCo2(Integer co2) {
+        this.co2 = co2;
+    }
+
+    public Float getOutdoorTemperature() {
+        return outdoorTemperature;
+    }
+
+    public void setOutdoorTemperature(Float outdoorTemperature) {
+        this.outdoorTemperature = outdoorTemperature;
+    }
+
+    public Float getOutdoorHumidity() {
+        return outdoorHumidity;
+    }
+
+    public void setOutdoorHumidity(Float outdoorHumidity) {
+        this.outdoorHumidity = outdoorHumidity;
+    }
+
     @Override
     public String toString() {
         return "Metrics{" +
@@ -121,6 +177,11 @@ public class Metrics {
                 ", p_0_3_um=" + p_0_3_um +
                 ", p_2_5_um=" + p_2_5_um +
                 ", gas_680=" + gas_680 +
+                ", temperature=" + temperature +
+                ", humidity=" + humidity +
+                ", co2=" + co2 +
+                ", outdoor_temperature=" + outdoorTemperature +
+                ", outdoor_humidity=" + outdoorHumidity +
                 '}';
     }
 }
