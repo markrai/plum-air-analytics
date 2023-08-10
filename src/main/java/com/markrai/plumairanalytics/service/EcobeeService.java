@@ -107,7 +107,7 @@ public class EcobeeService {
 
         metrics.setHumidity(ecobeeResponse.getThermostatList().get(0).getRuntime().getActualHumidity().floatValue());
         metrics.setCo2(ecobeeResponse.getThermostatList().get(0).getRuntime().getActualCO2());
-        metrics.setGas_680(ecobeeResponse.getThermostatList().get(0).getRuntime().getActualVOC() / 100.0f);
+        metrics.setGas_680((float) ecobeeResponse.getThermostatList().get(0).getRuntime().getActualVOC());
 
         System.out.println("writing Ecobee data: " + metrics);
         metricsRepository.save(metrics);
