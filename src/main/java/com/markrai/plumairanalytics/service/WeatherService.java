@@ -27,35 +27,39 @@ public class WeatherService {
     private DetectorRepository detectorRepository;
 
     public void getWeatherData(Timestamp currentTimestamp) {
-        String apiKey = System.getenv("OPENWEATHER_API_KEY");
-        String url = String.format("https://api.openweathermap.org/data/2.5/weather?q=%s,%s,%s&appid=%s&units=%s",
-                weatherConfig.getCity(),
-                weatherConfig.getState(),
-                weatherConfig.getCountry(),
-                apiKey,
-                weatherConfig.getUnits());
+        try {
+            String apiKey = System.getenv("OPENWEATHER_API_KEY");
+            String url = String.format("https://api.openweathermap.org/data/2.5/weather?q=%s,%s,%s&appid=%s&units=%s",
+                    weatherConfig.getCity(),
+                    weatherConfig.getState(),
+                    weatherConfig.getCountry(),
+                    apiKey,
+                    weatherConfig.getUnits());
 
-        RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = new RestTemplate();
 
-        WeatherResponse response = restTemplate.exchange(url, HttpMethod.GET, null, WeatherResponse.class).getBody();
+            WeatherResponse response = restTemplate.exchange(url, HttpMethod.GET, null, WeatherResponse.class).getBody();
 
-        Metrics metrics = new Metrics();
-        metrics.setTimestamp(currentTimestamp);
+            Metrics metrics = new Metrics();
+            metrics.setTimestamp(currentTimestamp);
 
-        // Fetch the detector entity for type 'openweathermap'
-        Optional<Detector> weatherDetectorOpt = detectorRepository.findByType("openweathermap");
-        if (weatherDetectorOpt.isPresent()) {
-            Detector weatherDetector = weatherDetectorOpt.get();
-            metrics.setDetectorId(weatherDetector.getId());
-            metrics.setPlacement(weatherDetector.getName());
-        } else {
-            System.err.println("No detector found for type 'openweathermap'");
-            return;
+            // Fetch the detector entity for type 'openweathermap'
+            Optional<Detector> weatherDetectorOpt = detectorRepository.findByType("openweathermap");
+            if (weatherDetectorOpt.isPresent()) {
+                Detector weatherDetector = weatherDetectorOpt.get();
+                metrics.setDetectorId(weatherDetector.getId());
+                metrics.setPlacement(weatherDetector.getName());
+            } else {
+                System.err.println("No detector found for type 'openweathermap'");
+                return;
+            }
+
+            metrics.setOutdoorTemperature(response.getMain().getTemp().floatValue());
+            metrics.setOutdoorHumidity(response.getMain().getHumidity().floatValue());
+            System.out.println("writing Weather data: " + metrics);
+            metricsRepository.save(metrics);
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching weather data: " + e.getMessage(), e);
         }
-
-        metrics.setOutdoorTemperature(response.getMain().getTemp().floatValue());
-        metrics.setOutdoorHumidity(response.getMain().getHumidity().floatValue());
-        System.out.println("writing Weather data: " + metrics);
-        metricsRepository.save(metrics);
     }
 }

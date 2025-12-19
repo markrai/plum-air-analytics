@@ -50,26 +50,42 @@ public class PurpleAirService {
     @Scheduled(fixedRate = 1800000) // 30 minutes
     // @Scheduled(fixedRate = 120000) // 2 minutes - for testing
     public void queryDetectors() {
-        logger.info("we are in queryDetectors()" + transactionManager.getClass().getName());
-        Iterable<Detector> detectors = detectorRepository.findAll();
-        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());  // Capture the timestamp here
+        try {
+            logger.info("we are in queryDetectors()" + transactionManager.getClass().getName());
+            Iterable<Detector> detectors = detectorRepository.findAll();
+            Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());  // Capture the timestamp here
 
-        for (Detector detector : detectors) {
-            String ip = detector.getIpAddr();
-            String normalizedIp = (ip == null) ? null : ip.trim();
+            for (Detector detector : detectors) {
+                try {
+                    String ip = detector.getIpAddr();
+                    String normalizedIp = (ip == null) ? null : ip.trim();
 
-            if (normalizedIp != null && "API".equalsIgnoreCase(normalizedIp)) {
-                // This is an API-based detector, handle it based on type
-                if ("ecobee".equals(detector.getType())) {
-                    ecobeeService.getThermostatData(currentTimestamp);
-                } else if ("openweathermap".equals(detector.getType())) {
-                    weatherService.getWeatherData(currentTimestamp);
+                    if (normalizedIp != null && "API".equalsIgnoreCase(normalizedIp)) {
+                        // This is an API-based detector, handle it based on type
+                        if ("ecobee".equals(detector.getType())) {
+                            try {
+                                ecobeeService.getThermostatData(currentTimestamp);
+                            } catch (Exception e) {
+                                logger.error("Error processing Ecobee detector (id={}): {}", detector.getId(), e.getMessage(), e);
+                            }
+                        } else if ("openweathermap".equals(detector.getType())) {
+                            try {
+                                weatherService.getWeatherData(currentTimestamp);
+                            } catch (Exception e) {
+                                logger.error("Error processing Weather detector (id={}): {}", detector.getId(), e.getMessage(), e);
+                            }
+                        }
+                        // 'smartsensor' types are implicitly ignored here, as they are handled within EcobeeService
+                    } else {
+                        // This is a standard PurpleAir sensor with a local IP address
+                        collectData(detector.getIpAddr(), detector.getId(), currentTimestamp);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error processing detector (id={}, name={}): {}", detector.getId(), detector.getName(), e.getMessage(), e);
                 }
-                // 'smartsensor' types are implicitly ignored here, as they are handled within EcobeeService
-            } else {
-                // This is a standard PurpleAir sensor with a local IP address
-                collectData(detector.getIpAddr(), detector.getId(), currentTimestamp);
             }
+        } catch (Exception e) {
+            logger.error("Critical error in queryDetectors() - scheduled task will continue: {}", e.getMessage(), e);
         }
     }
 

@@ -53,8 +53,9 @@ public class EcobeeService {
     final URI uri = builder.build().encode().toUri();
 
     public void getThermostatData(Timestamp currentTimestamp) {
-        EcobeeToken currentToken = getCurrentToken();
-        String accessToken = currentToken.getAccessToken();
+        try {
+            EcobeeToken currentToken = getCurrentToken();
+            String accessToken = currentToken.getAccessToken();
 
         // Fetch the detector entity for type 'ecobee'
         Optional<Detector> ecobeeDetectorOpt = detectorRepository.findByType("ecobee");
@@ -111,6 +112,10 @@ public class EcobeeService {
 
         // Process remote sensors
         processRemoteSensors(mainThermostat.getRemoteSensors(), currentTimestamp);
+        } catch (Exception e) {
+            logger.error("Error in getThermostatData(): {}", e.getMessage(), e);
+            throw e; // Re-throw to be caught by caller
+        }
     }
 
     private void processRemoteSensors(java.util.List<RemoteSensor> remoteSensors, Timestamp currentTimestamp) {
