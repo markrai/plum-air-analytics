@@ -57,6 +57,8 @@ public class PurpleAirService {
 
             for (Detector detector : detectors) {
                 try {
+                    logger.debug("Processing detector id={}, name={}, type={}, ip={}", 
+                        detector.getId(), detector.getName(), detector.getType(), detector.getIpAddr());
                     String ip = detector.getIpAddr();
                     String normalizedIp = (ip == null) ? null : ip.trim();
 
@@ -66,13 +68,15 @@ public class PurpleAirService {
                             try {
                                 ecobeeService.getThermostatData(currentTimestamp);
                             } catch (Exception e) {
-                                logger.error("Error processing Ecobee detector (id={}): {}", detector.getId(), e.getMessage(), e);
+                                logger.error("Error processing Ecobee detector (id={}, name={}): {}", 
+                                    detector.getId(), detector.getName(), e.getMessage(), e);
                             }
                         } else if ("openweathermap".equals(detector.getType())) {
                             try {
                                 weatherService.getWeatherData(currentTimestamp);
                             } catch (Exception e) {
-                                logger.error("Error processing Weather detector (id={}): {}", detector.getId(), e.getMessage(), e);
+                                logger.error("Error processing Weather detector (id={}, name={}): {}", 
+                                    detector.getId(), detector.getName(), e.getMessage(), e);
                             }
                         }
                         // 'smartsensor' types are implicitly ignored here, as they are handled within EcobeeService
@@ -81,7 +85,8 @@ public class PurpleAirService {
                         collectData(detector.getIpAddr(), detector.getId(), currentTimestamp);
                     }
                 } catch (Exception e) {
-                    logger.error("Error processing detector (id={}, name={}): {}", detector.getId(), detector.getName(), e.getMessage(), e);
+                    logger.error("Error processing detector (id={}, name={}): {}", 
+                        detector.getId(), detector.getName(), e.getMessage(), e);
                 }
             }
         } catch (Exception e) {
@@ -105,12 +110,17 @@ public class PurpleAirService {
         String url = "http://" + normalizedIp + "/json";
 
         try {
+            logger.debug("Attempting to collect data from detector id={}, url={}", id, url);
             DetectorResponse response = restTemplate.getForObject(url, DetectorResponse.class);
             if (response != null) {
                 writeMetricsData(response, id, currentTimeStamp);
+            } else {
+                logger.warn("Received null response from detector id={}, url={}", id, url);
             }
         } catch (RestClientException e) {
-            logger.error("Error collecting data from " + url, e);
+            logger.error("Error collecting data from detector id={}, url={}: {}", id, url, e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Unexpected error collecting data from detector id={}, url={}: {}", id, url, e.getMessage(), e);
         }
     }
 
@@ -140,7 +150,7 @@ public class PurpleAirService {
         logger.info("writing PurpleAir data: " + metrics);
 
         try {
-            Metrics savedMetrics = metricsRepository.save(metrics);
+            metricsRepository.save(metrics);
             metricsRepository.flush();
         } catch (Exception e) {
             logger.error("Error occurred while trying to save metrics: " + e.getMessage(), e);
