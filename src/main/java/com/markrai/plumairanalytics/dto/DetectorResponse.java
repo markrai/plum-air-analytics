@@ -1,10 +1,21 @@
 package com.markrai.plumairanalytics.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 public class DetectorResponse {
+    @JsonDeserialize(using = FloatNanDeserializer.class)
     private Float p_0_3_um;
+    
+    @JsonDeserialize(using = FloatNanDeserializer.class)
     private Float p_0_3_um_b;
+    
+    @JsonDeserialize(using = FloatNanDeserializer.class)
     private Float p_2_5_um;
+    
+    @JsonDeserialize(using = FloatNanDeserializer.class)
     private Float p_2_5_um_b;
+    
+    @JsonDeserialize(using = FloatNanDeserializer.class)
     private Float gas_680;
 
     // Getters and Setters
