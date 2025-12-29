@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  plumairanalytics:
+    image: markraidc/plumairanalytics:latest
+    container_name: plumairanalytics
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=${SERVER_PORT:-8080}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+    # Note: When using host network mode, port mapping is not needed
+    # The container will use the host's network directly
+
