@@ -10,6 +10,9 @@ public class RemoteSensor {
     @JsonProperty("id")
     private String id;
     
+    @JsonProperty("code")
+    private String code;
+    
     @JsonProperty("name")
     private String name;
     
@@ -22,6 +25,14 @@ public class RemoteSensor {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {

@@ -157,23 +157,25 @@ public class EcobeeService {
         logger.error("========================================");
         
         for (RemoteSensor sensor : remoteSensors) {
+            String sensorCode = sensor.getCode(); // Use 'code' field (4-letter code) instead of 'id'
             String sensorId = sensor.getId();
             String sensorName = sensor.getName();
             String placement;
             int detectorId;
 
             // Log the sensor details prominently
-            logger.error(">>> PROCESSING SENSOR - ID: '{}' | Name: '{}'", 
+            logger.error(">>> PROCESSING SENSOR - Code: '{}' | ID: '{}' | Name: '{}'", 
+                sensorCode != null ? sensorCode : "NULL",
                 sensorId != null ? sensorId : "NULL", 
                 sensorName != null ? sensorName : "NULL");
 
-            if (sensorId == null || sensorId.isEmpty()) {
-                logger.error(">>> SKIPPING: Sensor ID is null/empty for sensor named '{}'", sensorName);
+            if (sensorCode == null || sensorCode.isEmpty()) {
+                logger.warn("Skipping remote sensor with null/empty code (ID: '{}', name: '{}') - no API code found.", sensorId, sensorName);
                 continue;
             }
 
-            // Map by API ID instead of name
-            switch (sensorId) {
+            // Map by API code (4-letter code) instead of name or ID
+            switch (sensorCode) {
                 case "CNCZ": // Bedroom Sensor (SmartSensorNour)
                     placement = "SmartSensorNour";
                     detectorId = 7;
@@ -187,7 +189,7 @@ public class EcobeeService {
                     detectorId = 9;
                     break;
                 default:
-                    logger.warn("Skipping remote sensor with API ID '{}' (name: '{}') - no matching detector configured.", sensorId, sensorName);
+                    logger.warn("Skipping remote sensor with code '{}' (ID: '{}', name: '{}') - no matching detector configured.", sensorCode, sensorId, sensorName);
                     continue;
             }
 
