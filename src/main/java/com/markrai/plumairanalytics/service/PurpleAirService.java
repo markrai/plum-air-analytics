@@ -57,8 +57,6 @@ public class PurpleAirService {
 
             for (Detector detector : detectors) {
                 try {
-                    logger.debug("Processing detector id={}, name={}, type={}, ip={}", 
-                        detector.getId(), detector.getName(), detector.getType(), detector.getIpAddr());
                     String ip = detector.getIpAddr();
                     String normalizedIp = (ip == null) ? null : ip.trim();
 
@@ -110,12 +108,9 @@ public class PurpleAirService {
         String url = "http://" + normalizedIp + "/json";
 
         try {
-            logger.debug("Attempting to collect data from detector id={}, url={}", id, url);
             DetectorResponse response = restTemplate.getForObject(url, DetectorResponse.class);
             if (response != null) {
                 writeMetricsData(response, id, currentTimeStamp);
-            } else {
-                logger.warn("Received null response from detector id={}, url={}", id, url);
             }
         } catch (RestClientException e) {
             logger.error("Error collecting data from detector id={}, url={}: {}", id, url, e.getMessage(), e);

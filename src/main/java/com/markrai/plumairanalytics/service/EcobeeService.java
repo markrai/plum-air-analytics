@@ -80,15 +80,6 @@ public class EcobeeService {
         // Parse the response to get the thermostat data
         String responseBody = responseEntity.getBody();
         
-        // Log the FULL raw response for debugging - this will show us the exact sensor IDs
-        if (responseBody != null && responseBody.length() > 0) {
-            logger.error("========================================");
-            logger.error("ECOBEE API FULL RESPONSE (for sensor ID detection):");
-            logger.error("========================================");
-            logger.error(responseBody);
-            logger.error("========================================");
-        }
-        
         ObjectMapper mapper = new ObjectMapper();
         EcobeeResponse ecobeeResponse;
         try {
@@ -99,28 +90,6 @@ public class EcobeeService {
         }
 
         Thermostat mainThermostat = ecobeeResponse.getThermostatList().get(0);
-
-        // Log all remote sensors with their IDs for debugging - using ERROR level to ensure visibility
-        if (mainThermostat.getRemoteSensors() != null && !mainThermostat.getRemoteSensors().isEmpty()) {
-            logger.error("========================================");
-            logger.error("ECOBEE REMOTE SENSORS - IDENTIFICATION:");
-            logger.error("========================================");
-            for (RemoteSensor sensor : mainThermostat.getRemoteSensors()) {
-                String sensorId = sensor.getId();
-                String sensorName = sensor.getName();
-                String capabilityType = "unknown";
-                if (sensor.getCapability() != null && !sensor.getCapability().isEmpty()) {
-                    capabilityType = sensor.getCapability().get(0).getType();
-                }
-                logger.error(">>> Sensor ID: '{}' | Name: '{}' | Capability: '{}'", 
-                    sensorId != null ? sensorId : "NULL", 
-                    sensorName != null ? sensorName : "NULL",
-                    capabilityType);
-            }
-            logger.error("========================================");
-        } else {
-            logger.error("WARNING: remoteSensors list is null or empty!");
-        }
 
         // Save the thermostat data in the database
         Metrics metrics = new Metrics();
@@ -152,22 +121,12 @@ public class EcobeeService {
     }
 
     private void processRemoteSensors(java.util.List<RemoteSensor> remoteSensors, Timestamp currentTimestamp) {
-        logger.error("========================================");
-        logger.error("PROCESSING REMOTE SENSORS - COUNT: {}", remoteSensors != null ? remoteSensors.size() : 0);
-        logger.error("========================================");
-        
         for (RemoteSensor sensor : remoteSensors) {
             String sensorCode = sensor.getCode(); // Use 'code' field (4-letter code) instead of 'id'
             String sensorId = sensor.getId();
             String sensorName = sensor.getName();
             String placement;
             int detectorId;
-
-            // Log the sensor details prominently
-            logger.error(">>> PROCESSING SENSOR - Code: '{}' | ID: '{}' | Name: '{}'", 
-                sensorCode != null ? sensorCode : "NULL",
-                sensorId != null ? sensorId : "NULL", 
-                sensorName != null ? sensorName : "NULL");
 
             if (sensorCode == null || sensorCode.isEmpty()) {
                 logger.warn("Skipping remote sensor with null/empty code (ID: '{}', name: '{}') - no API code found.", sensorId, sensorName);
