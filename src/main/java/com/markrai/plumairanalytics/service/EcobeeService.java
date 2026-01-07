@@ -79,15 +79,48 @@ public class EcobeeService {
 
         // Parse the response to get the thermostat data
         String responseBody = responseEntity.getBody();
+        
+        // Log the FULL raw response for debugging - this will show us the exact sensor IDs
+        if (responseBody != null && responseBody.length() > 0) {
+            logger.error("========================================");
+            logger.error("ECOBEE API FULL RESPONSE (for sensor ID detection):");
+            logger.error("========================================");
+            logger.error(responseBody);
+            logger.error("========================================");
+        }
+        
         ObjectMapper mapper = new ObjectMapper();
         EcobeeResponse ecobeeResponse;
         try {
             ecobeeResponse = mapper.readValue(responseBody, EcobeeResponse.class);
         } catch (IOException e) {
+            logger.error("Failed to parse ecobee response. Raw response: {}", responseBody);
             throw new RuntimeException("Failed to parse ecobee response", e);
         }
 
         Thermostat mainThermostat = ecobeeResponse.getThermostatList().get(0);
+
+        // Log all remote sensors with their IDs for debugging - using ERROR level to ensure visibility
+        if (mainThermostat.getRemoteSensors() != null && !mainThermostat.getRemoteSensors().isEmpty()) {
+            logger.error("========================================");
+            logger.error("ECOBEE REMOTE SENSORS - IDENTIFICATION:");
+            logger.error("========================================");
+            for (RemoteSensor sensor : mainThermostat.getRemoteSensors()) {
+                String sensorId = sensor.getId();
+                String sensorName = sensor.getName();
+                String capabilityType = "unknown";
+                if (sensor.getCapability() != null && !sensor.getCapability().isEmpty()) {
+                    capabilityType = sensor.getCapability().get(0).getType();
+                }
+                logger.error(">>> Sensor ID: '{}' | Name: '{}' | Capability: '{}'", 
+                    sensorId != null ? sensorId : "NULL", 
+                    sensorName != null ? sensorName : "NULL",
+                    capabilityType);
+            }
+            logger.error("========================================");
+        } else {
+            logger.error("WARNING: remoteSensors list is null or empty!");
+        }
 
         // Save the thermostat data in the database
         Metrics metrics = new Metrics();
@@ -119,26 +152,42 @@ public class EcobeeService {
     }
 
     private void processRemoteSensors(java.util.List<RemoteSensor> remoteSensors, Timestamp currentTimestamp) {
+        logger.error("========================================");
+        logger.error("PROCESSING REMOTE SENSORS - COUNT: {}", remoteSensors != null ? remoteSensors.size() : 0);
+        logger.error("========================================");
+        
         for (RemoteSensor sensor : remoteSensors) {
+            String sensorId = sensor.getId();
             String sensorName = sensor.getName();
             String placement;
             int detectorId;
 
-            switch (sensorName) {
-                case "Bedroom Sensor": // Updated API sensor name
+            // Log the sensor details prominently
+            logger.error(">>> PROCESSING SENSOR - ID: '{}' | Name: '{}'", 
+                sensorId != null ? sensorId : "NULL", 
+                sensorName != null ? sensorName : "NULL");
+
+            if (sensorId == null || sensorId.isEmpty()) {
+                logger.error(">>> SKIPPING: Sensor ID is null/empty for sensor named '{}'", sensorName);
+                continue;
+            }
+
+            // Map by API ID instead of name
+            switch (sensorId) {
+                case "CNCZ": // Bedroom Sensor (SmartSensorNour)
                     placement = "SmartSensorNour";
                     detectorId = 7;
                     break;
-                case "Rania":
+                case "B434": // Rania (SmartSensorRania)
                     placement = "SmartSensorRania";
                     detectorId = 8;
                     break;
-                case "Rumi":
+                case "B9XY": // Rumi (SmartSensorRumi)
                     placement = "SmartSensorRumi";
                     detectorId = 9;
                     break;
                 default:
-                    logger.warn("Skipping remote sensor '{}' - no matching detector configured.", sensorName);
+                    logger.warn("Skipping remote sensor with API ID '{}' (name: '{}') - no matching detector configured.", sensorId, sensorName);
                     continue;
             }
 
